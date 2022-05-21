@@ -1,0 +1,14 @@
+{
+    "C_Cpp.intelliSenseEngine": "Tag Parser",
+    "idf.adapterTargetName": "esp32",
+    "idf.customExtraPaths": "/home/keshav/esp/esp-idf/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin:/home/keshav/esp/esp-idf/tools/xtensa-esp32s2-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32s2-elf/bin:/home/keshav/esp/esp-idf/tools/xtensa-esp32s3-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32s3-elf/bin:/home/keshav/esp/esp-idf/tools/riscv32-esp-elf/esp-2021r2-patch3-8.4.0/riscv32-esp-elf/bin:/home/keshav/esp/esp-idf/tools/esp32ulp-elf/2.28.51-esp-20191205/esp32ulp-elf-binutils/bin:/home/keshav/esp/esp-idf/tools/esp32s2ulp-elf/2.28.51-esp-20191205/esp32s2ulp-elf-binutils/bin:/home/keshav/esp/esp-idf/tools/cmake/3.20.3/bin:/home/keshav/esp/esp-idf/tools/openocd-esp32/v0.11.0-esp32-20211220/openocd-esp32/bin:/home/keshav/esp/esp-idf/tools/ninja/1.10.2",
+    "idf.customExtraVars": "{\"OPENOCD_SCRIPTS\":\"/home/keshav/esp/esp-idf/tools/openocd-esp32/v0.11.0-esp32-20211220/openocd-esp32/share/openocd/scripts\"}",
+    "idf.espIdfPath": "/home/keshav/Desktop/ESP-IDF/esp-idf",
+    "idf.openOcdConfigs": [
+        "board/esp32-wrover-kit-3.3v.cfg"
+    ],
+    "idf.port": "/dev/ttyUSB0",
+    "idf.pythonBinPath": "/home/keshav/esp/esp-idf/python_env/idf4.4_py3.8_env/bin/python",
+    "idf.toolsPath": "/home/keshav/esp/esp-idf",
+    "idf.flashType": "UART"
+}
