@@ -1,0 +1,189 @@
+/*
+ * Driver for DHT11 sensor.
+ * 
+ * Copyright (C) 2018  Nicola Simoni <nikfloydrose@hotmail.it>
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include "dht11.h"
+#include "tasks_common.h"
+
+#define START_DELAYMS 20
+#define SAFE_DELAYMS 1500
+#define THRESHOLD_US 100
+#define NUM_TOTAL_BITS 41 /* 40 bit data + 1 bit start signal */
+#define NUM_TOTAL_BYTES 5
+#define FALLING_EDGES (NUM_TOTAL_BITS + 1)  /* count also falling edge of start bit */
+
+static volatile UINT8 cntEdge;
+static UINT32 timeVector[FALLING_EDGES];
+static UINT8 startAcquisition;
+static UINT16 timeVectorDelta[NUM_TOTAL_BITS];
+static UINT32 startSampleTime;
+static UINT8 outBits[NUM_TOTAL_BITS - 1];
+static UINT8 dataBytes[NUM_TOTAL_BYTES];
+static UINT8 parityCheck;
+static UINT8 cntBits;
+static UINT8 i, j;
+
+void errorHandler(int response)
+{
+	switch(response) {
+	
+		case DHT_TIMEOUT_ERROR :
+			ESP_LOGE( TAG, "Sensor Timeout\n" );
+			break;
+
+		case DHT_CHECKSUM_ERROR:
+			ESP_LOGE( TAG, "CheckSum error\n" );
+			break;
+
+		case DHT_OK:
+			break;
+
+		default :
+			ESP_LOGE( TAG, "Unknown error\n" );
+	}
+}
+
+static void getSystemTimeUs(void)
+{
+  if(startAcquisition && (cntEdge < FALLING_EDGES))
+    timeVector[cntEdge++] = GET_MICROSECONDS();
+}
+
+DHT11_RESULT dht11GetData(UINT8 dht11Gpio, DHT11_DATA *ptrData)
+{ 
+  /* wait for sensor adjustment before each measure */
+  DELAY_MS(SAFE_DELAYMS);
+  
+  /* send start signal */
+  GPIO_MODE(dht11Gpio, GPIO_OUT);
+  GPIO_WRITE(dht11Gpio, GPIO_LOW);
+  DELAY_MS(START_DELAYMS);
+  GPIO_WRITE(dht11Gpio, GPIO_HIGH);
+  GPIO_MODE(dht11Gpio, GPIO_IN_PULLUP);
+
+  ATTACH_INTERRUPT(dht11Gpio, getSystemTimeUs, FALLING_EDGE);
+  startSampleTime = GET_MILLISECONDS();
+  startAcquisition = 1;
+  cntEdge = 0;
+    
+  /* sample time on the falling edges of rx data and exit in case of timeout */
+  while((cntEdge < FALLING_EDGES) && ((GET_MILLISECONDS() - startSampleTime) < SAFE_DELAYMS));
+  
+  startAcquisition = 0;
+  DETACH_INTERRUPT(dht11Gpio);
+
+  /* check if all bits have been acquired */
+  if(cntEdge != FALLING_EDGES)
+  {
+    return DHT11_RESULT_BAD_MEASURE;
+  }
+  
+  /* compute delta times between falling edges */
+  for(cntEdge = 0; cntEdge < FALLING_EDGES; cntEdge++)
+  {
+    timeVectorDelta[cntEdge] = timeVector[cntEdge + 1] - timeVector[cntEdge];
+  }
+ 
+  /* discriminate bit values */
+  for(i = 0; i < NUM_TOTAL_BITS; i++)
+  {
+    outBits[i] = (timeVectorDelta[i + 1] < THRESHOLD_US) ? 0 : 1;
+  }
+
+  /* compute bytes values from bits */
+  cntBits = 0;
+
+  for(i = 0; i < NUM_TOTAL_BYTES; i++)
+  {
+    dataBytes[i] = 0;
+    
+    for(j = 0; j < 8; j++)
+    {
+      dataBytes[i] += ((1 << (7 - j)) * outBits[cntBits++]);
+    }
+  }
+
+  /* compute parity check */
+  parityCheck = 0;
+  
+  for(i = 0; i < (NUM_TOTAL_BYTES - 1); i++)
+  {
+     parityCheck += dataBytes[i];
+  }
+
+  /* return results */
+  if(parityCheck == dataBytes[NUM_TOTAL_BYTES - 1])
+  {
+    ptrData->RH = dataBytes[0] + ((FLOAT)dataBytes[1]) / 100;
+    ptrData->T  = dataBytes[2] + ((FLOAT)dataBytes[3]) / 100;
+
+    return DHT11_RESULT_SUCCESS;
+  }
+  else
+  {
+    return DHT11_RESULT_BAD_PARITY;
+  }
+}
+
+static void DHT11_task(void *pvParameter)
+{
+	setDHTgpio(DHT_GPIO);
+	printf("Starting DHT task\n\n");
+
+	for (;;)
+	{
+		printf("=== Reading DHT ===\n");
+		DHT11_DATA data;
+    DHT11_RESULT dht11GetData(DHT_GPIO, data)
+
+		errorHandler(ret);
+
+		printf("Hum %.1f\n", data->RH);
+		printf("Tmp %.1f\n", data->T);
+
+		// Wait at least 2 seconds before reading again
+		// The interval of the whole process must be more than 2 seconds
+		vTaskDelay(4000 / portTICK_RATE_MS);
+	}
+}
+
+
+void dht11_task_start(void){
+  xTaskCreatePinnedToCore(&DHT11_task, "DHT11_task", DHT11_TASK_STACK_SIZE, NULL, DHT11_TASK_PRIORITY, NULL, DHT11_TASK_CORE_ID);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

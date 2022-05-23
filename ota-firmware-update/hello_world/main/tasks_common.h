@@ -17,10 +17,4 @@
 #define HTTP_SERVER_MONITOR_CORE_ID                 0
 
 
-// DHT22 Sensor task
-#define DHT11_TASK_STACK_SIZE                       4096
-#define DHT11_TASK_PRIORITY                         5
-#define DHT11_TASK_CORE_ID                          1
-
-
 #endif /* MAIN_TASKS_COMMON_H_ */
