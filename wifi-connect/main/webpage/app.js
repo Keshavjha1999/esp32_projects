@@ -10,6 +10,9 @@ var otaTimerVar =  null;
 $(document).ready(function(){
 	getUpdateStatus();
     startDHTSensorInterval();
+    $("#connect_wifi").on("click", function() {
+        checkCredentials();
+    });
 });   
 
 /**
@@ -134,6 +137,30 @@ function otaRebootTimer()
  function startDHTSensorInterval() {
      setInterval(getDHTSensorValues, 5000);
  }
+
+
+/**
+ * Clears the connection status interval.
+ */
+
+function stopWifiConnectStatusInterval(){
+
+}
+
+
+/**
+ * Gets the WiFi connection status
+ */
+function getWifiConnectionStatus() {
+
+}
+
+/**
+ * Starts the interval for checking the connection status.
+ */
+function startWifiConnectStatusInterval(){
+    
+}
 
 
 

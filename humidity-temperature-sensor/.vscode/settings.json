@@ -10,5 +10,8 @@
     "idf.port": "/dev/ttyUSB0",
     "idf.pythonBinPath": "/home/keshav/esp/esp-idf/python_env/idf4.4_py3.8_env/bin/python",
     "idf.toolsPath": "/home/keshav/esp/esp-idf",
-    "idf.flashType": "UART"
+    "idf.flashType": "UART",
+    "files.associations": {
+        "*.tcc": "cpp"
+    }
 }
